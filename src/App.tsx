@@ -244,9 +244,9 @@ export default function App() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-md mx-auto p-8"
+      className="max-w-md mx-auto w-full"
     >
-      <div className="bg-white rounded-2xl p-10 shadow-soft border-4 border-brand-blue text-center">
+      <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-soft border-4 border-brand-blue text-center">
         <div className="mb-8">
           <div className="w-20 h-20 bg-brand-yellow rounded-full mx-auto flex items-center justify-center mb-4">
             <School className="text-white w-10 h-10" />
@@ -367,7 +367,7 @@ export default function App() {
         </button>
         
         {/* Progress (Right) */}
-        <div className="bg-brand-blue px-6 py-2 rounded-full font-bold text-slate-600 shadow-sm border-2 border-white">
+        <div className="bg-brand-blue px-4 sm:px-6 py-2 rounded-full font-bold text-xs sm:text-base text-slate-600 shadow-sm border-2 border-white whitespace-nowrap">
           {level} - Row {row} ( {currentWordIndex + 1} / {currentWordList.length} )
         </div>
       </div>
@@ -377,27 +377,27 @@ export default function App() {
           key={currentWordIndex}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full bg-white rounded-3xl p-12 shadow-soft border-4 border-brand-blue relative"
+          className="w-full bg-white rounded-3xl sm:p-12 p-6 shadow-soft border-4 border-brand-blue relative"
         >
           {/* Hint Section */}
-          <div className="mb-12 text-center">
+          <div className="mb-8 sm:mb-12 text-center">
             {/* Audio Button - Available in all modes as requested */}
             <button 
               onClick={() => speak(currentWord)}
-              className="w-20 h-20 bg-brand-pink rounded-full flex items-center justify-center mx-auto mb-6 hover:scale-105 active:scale-95 transition-transform shadow-sm border-4 border-white"
+              className="sm:w-20 sm:h-20 w-16 h-16 bg-brand-pink rounded-full flex items-center justify-center mx-auto mb-6 hover:scale-105 active:scale-95 transition-transform shadow-sm border-4 border-white"
             >
-              <Volume2 size={36} className="text-slate-700" />
+              <Volume2 className="text-slate-700 w-8 h-8 sm:w-10 sm:h-10" />
             </button>
 
             {mode === Mode.TRANSLATION && (
-              <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100">
+              <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl border-2 border-slate-100">
                 <span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-2">英文定義</span>
-                <p className="text-xl font-medium text-slate-600 italic">"{wordInfo.definition}"</p>
+                <p className="text-lg sm:text-xl font-medium text-slate-600 italic">"{wordInfo.definition}"</p>
               </div>
             )}
             {mode === Mode.FILL_BLANK && (
-              <div className="bg-slate-50 p-8 rounded-2xl border-2 border-slate-100 min-h-[120px] flex items-center justify-center">
-                <p className="text-2xl font-bold text-slate-700 leading-relaxed">
+              <div className="bg-slate-50 p-6 sm:p-8 rounded-2xl border-2 border-slate-100 min-h-[100px] flex items-center justify-center">
+                <p className="text-lg sm:text-2xl font-bold text-slate-700 leading-relaxed">
                   {wordInfo.example ? (
                     wordInfo.example.split(new RegExp(`(${currentWord})`, 'gi')).map((part, i) => (
                       <span key={i}>
@@ -415,15 +415,15 @@ export default function App() {
           </div>
 
           {/* Typing Area */}
-          <div className="relative mb-16 h-24 flex items-center justify-center gap-3">
+          <div className="relative mb-12 sm:mb-16 h-20 sm:h-24 flex items-center justify-center gap-1 sm:gap-3 flex-wrap">
             {currentWord.split('').map((char, i) => (
               <div key={i} className="flex flex-col items-center">
-                <div className="h-14 font-black text-4xl text-slate-800 min-w-[30px] text-center select-none">
+                <div className="h-10 sm:h-14 font-black text-2xl sm:text-4xl text-slate-800 min-w-[20px] sm:min-w-[30px] text-center select-none uppercase">
                   {userInput[i] || ""}
                 </div>
-                <div className={`h-1.5 w-10 rounded-full transition-all duration-300 ${
+                <div className={`h-1 sm:h-1.5 w-6 sm:w-10 rounded-full transition-all duration-300 ${
                   userInput.length === i 
-                    ? "bg-brand-pink w-12" 
+                    ? "bg-brand-pink w-8 sm:w-12" 
                     : i < userInput.length ? "bg-brand-blue" : "bg-slate-200"
                 }`} />
               </div>
@@ -460,9 +460,9 @@ export default function App() {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="max-w-2xl mx-auto p-6"
+        className="max-w-2xl mx-auto w-full"
       >
-        <div className="bg-white rounded-3xl p-10 shadow-soft border-4 border-brand-yellow text-center">
+        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-soft border-4 border-brand-yellow text-center">
           <Trophy size={64} className="text-brand-yellow mx-auto mb-6" />
           <h2 className="text-3xl font-black text-slate-800 mb-1">學習結算</h2>
           
