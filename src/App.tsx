@@ -95,6 +95,16 @@ export default function App() {
   const [feedback, setFeedback] = useState<{ type: 'correct' | 'wrong' | null, msg: string }>({ type: null, msg: "" });
   const [isLocked, setIsLocked] = useState<boolean>(false);
 
+  // Hidden Input Ref for Mobile Keyboard
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input helper
+  const focusInput = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   // API Content State
   const [wordInfo, setWordInfo] = useState<{ definition?: string, example?: string }>({});
 
@@ -189,28 +199,34 @@ export default function App() {
 
     setTimeout(() => {
       handleNextWord();
+      // Ensure input stays focused after transition
+      setTimeout(focusInput, 50);
     }, 2000);
-  }, [userInput, currentWord, isLocked, handleNextWord]);
+  }, [userInput, currentWord, isLocked, handleNextWord, focusInput]);
 
-  // --- Global Keyboard Listener ---
+  // --- Keyboard & Input Handling ---
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isLocked) return;
+    const value = e.target.value;
+    // Only allow letters, spaces, and hyphens, up to the word length
+    if (/^[a-zA-Z\s\-]*$/.test(value) && value.length <= currentWord.length) {
+      setUserInput(value);
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && userInput.length > 0) {
+      checkAnswer();
+    }
+  };
+
+  // Auto-focus logic
   useEffect(() => {
-    if (view !== View.PRACTICE || isLocked) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter") {
-        if (userInput.length > 0) checkAnswer();
-      } else if (e.key === "Backspace") {
-        setUserInput(prev => prev.slice(0, -1));
-      } else if (e.key.length === 1 && /^[a-zA-Z\s\-]$/.test(e.key)) {
-        if (userInput.length < currentWord.length) {
-          setUserInput(prev => prev + e.key);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view, isLocked, userInput, currentWord.length, checkAnswer]);
+    if (view === View.PRACTICE) {
+      const timer = setTimeout(focusInput, 300); // Small delay to allow transition
+      return () => clearTimeout(timer);
+    }
+  }, [view, focusInput, currentWordIndex]);
 
   // --- Practice View Initialization ---
   useEffect(() => {
@@ -319,7 +335,23 @@ export default function App() {
   );
 
   const renderPractice = () => (
-    <div className="min-h-screen flex flex-col p-6">
+    <div 
+      className="min-h-screen flex flex-col p-6 cursor-text"
+      onClick={focusInput}
+    >
+      {/* Hidden input to trigger mobile keyboard */}
+      <input
+        ref={inputRef}
+        type="text"
+        value={userInput}
+        onChange={handleInputChange}
+        onKeyDown={handleInputKeyDown}
+        className="absolute opacity-0 pointer-events-none"
+        autoFocus
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck="false"
+      />
       {/* Header - Back Button and Progress */}
       <div className="flex items-center justify-between mb-8 max-w-4xl mx-auto w-full">
         {/* Back Button (Left) */}
