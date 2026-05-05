@@ -211,6 +211,12 @@ export default function App() {
     // Only allow letters, spaces, and hyphens, up to the word length
     if (/^[a-zA-Z\s\-]*$/.test(value) && value.length <= currentWord.length) {
       setUserInput(value);
+      
+      // Auto-check when reaching the target length
+      if (value.length === currentWord.length && value.length > 0) {
+        // Small timeout to ensure the UI renders the last character before checking
+        setTimeout(checkAnswer, 100);
+      }
     }
   };
 
