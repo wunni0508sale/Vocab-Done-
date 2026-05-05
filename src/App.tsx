@@ -256,6 +256,26 @@ const wordData: WordData = {
   }
 };
 
+// --- Data Sanitization Helper ---
+const sanitizeString = (str: string) => {
+  if (!str) return "";
+  // 1. 移除隱形字元 (Zero Width Characters)
+  // 2. trim() 只修剪「前後」空白，保留單字中間的空格
+  // 3. 轉小寫進行比對
+  return str
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .trim()
+    .toLowerCase();
+};
+
+// Clean the entire word database globally once
+Object.keys(wordData).forEach(lvl => {
+  Object.keys(wordData[lvl]).forEach(r => {
+    const rowNum = Number(r);
+    wordData[lvl][rowNum] = wordData[lvl][rowNum].map(sanitizeString);
+  });
+});
+
 // Primary Student Friendly Content (Cambridge Learner's Dictionary Style)
 const primaryContent: { [key: string]: { def: string, ex: string } } = {
   cat: { def: "A small animal with soft fur that people keep as a pet.", ex: "I like dogs, but my sister likes her cute white cat." },
@@ -396,22 +416,31 @@ export default function App() {
     }
   }, [currentWordIndex, currentWordList.length]);
 
-  const checkAnswer = useCallback(() => {
+  const checkAnswer = useCallback((forcedValue?: string) => {
     if (isLocked) return;
     
-    setIsLocked(true);
-    const isCorrect = userInput.toLowerCase().trim() === currentWord.toLowerCase().trim();
+    // 優先使用傳入的最新值，否則才用 State
+    const finalInput = forcedValue !== undefined ? forcedValue : userInput;
+    const normalizedInput = sanitizeString(finalInput);
+    const normalizedTarget = sanitizeString(currentWord);
     
+    // 打開瀏覽器 F12 看看這兩行輸出，它是抓出錯誤的關鍵
+    console.log(`[比對測試] 輸入: "${normalizedInput}" | 目標: "${normalizedTarget}"`);
+    
+    const isCorrect = normalizedInput === normalizedTarget;
+    
+    setIsLocked(true);
     setResults(prev => [...prev, {
       word: currentWord,
       isCorrect,
-      userInput
+      userInput: finalInput
     }]);
 
     if (isCorrect) {
       setFeedback({ type: 'correct', msg: "太棒了！答對了 ✨" });
     } else {
-      setFeedback({ type: 'wrong', msg: `哎呀，應該是: ${currentWord.toUpperCase()}` });
+      // 不再強制使用 toUpperCase()，依照資料庫原始顯示（通常為小寫）顯示正確答案
+      setFeedback({ type: 'wrong', msg: `哎呀，應該是: ${currentWord}` });
     }
 
     setTimeout(() => {
@@ -425,14 +454,15 @@ export default function App() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isLocked) return;
     const value = e.target.value;
-    // Only allow letters, spaces, and hyphens, up to the word length
+    
+    // 允許英文字母、空格與連字號，並限制輸入長度不得超過單字長度
     if (/^[a-zA-Z\s\-]*$/.test(value) && value.length <= currentWord.length) {
       setUserInput(value);
       
-      // Auto-check when reaching the target length
+      // 當長度剛好等於目標單字長度時
       if (value.length === currentWord.length && value.length > 0) {
-        // Small timeout to ensure the UI renders the last character before checking
-        setTimeout(checkAnswer, 100);
+        // 關鍵：直接把 value 傳進去，不要等 State 更新
+        checkAnswer(value);
       }
     }
   };
@@ -641,7 +671,7 @@ export default function App() {
           <div className="relative mb-12 sm:mb-16 h-20 sm:h-24 flex items-center justify-center gap-1 sm:gap-3 flex-wrap">
             {currentWord.split('').map((char, i) => (
               <div key={i} className="flex flex-col items-center">
-                <div className="h-10 sm:h-14 font-black text-2xl sm:text-4xl text-slate-800 min-w-[20px] sm:min-w-[30px] text-center select-none uppercase">
+                <div className="h-10 sm:h-14 font-black text-2xl sm:text-4xl text-slate-800 min-w-[20px] sm:min-w-[30px] text-center select-none">
                   {userInput[i] || ""}
                 </div>
                 <div className={`h-1 sm:h-1.5 w-6 sm:w-10 rounded-full transition-all duration-300 ${
@@ -701,12 +731,23 @@ export default function App() {
               <div key={idx} className="flex items-center justify-between border-b border-slate-100 last:border-0 pb-2">
                 <div className="flex gap-4 items-center">
                   <span className="text-slate-300 font-mono text-sm">#{idx+1}</span>
-                  <span className={`text-xl font-bold ${res.isCorrect ? "text-slate-700" : "text-slate-400 line-through"}`}>
-                    {res.word}
-                  </span>
-                  {!res.isCorrect && (
-                    <span className="text-rose-500 font-bold ml-2">{res.userInput}</span>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {res.isCorrect ? (
+                      <span className="text-xl font-bold text-slate-700">
+                        {res.word}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="text-xl font-bold text-rose-500 line-through opacity-60">
+                          {res.userInput || "(空白)"}
+                        </span>
+                        <ArrowLeft className="text-slate-300 rotate-180" size={16} />
+                        <span className="text-xl font-bold text-emerald-600">
+                          {res.word}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
                 {res.isCorrect ? (
                   <CheckCircle2 className="text-emerald-500" size={24} />
