@@ -1,0 +1,6 @@
+{
+  "name": "MomoTyped - Chiikawa Style Word Practice",
+  "description": "A soft and cute vocabulary typing tool with frameless input, supporting Cambridge Starter/Flyer levels and multiple practice modes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["speech_synthesis"]
+}
